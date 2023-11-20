@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server-deployment
+spec:
+  selector:
+    matchLabels:
+      app: server
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: server
+    spec:
+      containers:
+        - name: server
+          image: ghcr.io/hnnazm/bp-server:latest
+          ports:
+            - containerPort: 1323
+          env:
+            - name: DATABASE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: db-config
+                  key: database-host
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: database-user
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: database-password
+            - name: DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: database-name
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: server-service
+spec:
+  type: NodePort
+  selector:
+    app: server
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 1323
+      nodePort: 30003

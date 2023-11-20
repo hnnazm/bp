@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client
+spec:
+  selector:
+    matchLabels:
+      app: client
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: client
+    spec:
+      containers:
+        - name: client
+          image: ghcr.io/hnnazm/bp-client:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: client-config
+                  key: host
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: client-config
+                  key: port
+            - name: PUBLIC_SITE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: client-config
+                  key: site-name
+            - name: PUBLIC_API_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: server-config
+                  key: api-endpoint
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-service
+spec:
+  type: NodePort
+  selector:
+    app: client
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 30004
